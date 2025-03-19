@@ -1,33 +1,41 @@
 pipeline {
     agent any
 
+    environment {
+        DOCKER_CREDENTIALS = credentials('docker-hub-cred')  // Docker Hub Credentials ID
+    }
+
     stages {
-        stage('scm') {
+        stage('SCM') {
             steps {
-        git branch: 'main', url: 'https://github.com/MugeshS-04/guvidevopsday1.git'
+                git branch: 'main', url: 'https://github.com/MugeshS-04/guvidevopsday1.git'
             }
         }
-        stage('build') {
+
+        stage('Build') {
             steps {
-               sh "mvn clean"
-               sh "mvn install"
-}
-}
-stage('build to images') {
+                sh "mvn clean"
+                sh "mvn install"
+            }
+        }
+
+        stage('Build Docker Image') {
             steps {
-               script{
-                  sh 'docker build -t mugeshs04/guvidevopsday1 .'
-               }
+                script {
+                    sh 'docker build -t mugeshs04/guvidevopsday1 .'
+                }
+            }
+        }
+
+        stage('Push to Docker Hub') {
+            steps {
+                script {
+                    docker.withRegistry('https://index.docker.io/v1/', 'docker-hub-cred') {
+                        sh 'docker push mugeshs04/guvidevopsday1'
+                    }
+                }
+            }
+        }
     }
 }
-stage('push to hub') {
-            steps {
-               script{
-                 withDockerRegistry(credentialsId: 'docker-hub-cred', url: 'https://index.docker.io/v1/') {
-                  sh 'docker push mugeshs04/guvidevopsday1'
-               }
-            }
-            }
-}
-}
-}
+
